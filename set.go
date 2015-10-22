@@ -159,14 +159,14 @@ func (t *Tuple) String() string {
 
 func Equivalent(s1, s2 Interface) bool {
 	// is every element in s1 a member of s2
-	for _, e := range s1.Elements() {
+	for e := range s1.Iter() {
 		if !s2.Contains(e) {
 			return false
 		}
 	}
 
 	// is every element in s2 a member of s1
-	for _, e := range s2.Elements() {
+	for e := range s2.Iter() {
 		if !s1.Contains(e) {
 			return false
 		}
@@ -176,7 +176,7 @@ func Equivalent(s1, s2 Interface) bool {
 }
 
 func IsSubset(s1, s2 Interface) bool {
-	for _, e := range s1.Elements() {
+	for e := range s1.Iter() {
 		if !s2.Contains(e) {
 			return false
 		}
@@ -196,7 +196,7 @@ func IsSuperset(s1, s2 Interface) bool {
 func Union(s1, s2 Interface) Interface {
 	s := With(s1.Elements())
 
-	for _, e := range s2.Elements() {
+	for e := range s2.Iter() {
 		s.Add(e)
 	}
 
@@ -209,13 +209,13 @@ func Intersection(s1, s2 Interface) Interface {
 	c1, c2 := s1.Cardinality(), s2.Cardinality()
 
 	if c1 < c2 {
-		for _, e := range s1.Elements() {
+		for e := range s1.Iter() {
 			if s2.Contains(e) {
 				s.Add(e)
 			}
 		}
 	} else {
-		for _, e := range s2.Elements() {
+		for e := range s2.Iter() {
 			if s1.Contains(e) {
 				s.Add(e)
 			}
@@ -225,10 +225,11 @@ func Intersection(s1, s2 Interface) Interface {
 	return s
 }
 
+// Complement(s1, s2) = s1\s2
 func Complement(s1, s2 Interface) Interface {
 	s := New()
 
-	for _, e := range s1.Elements() {
+	for e := range s1.Iter() {
 		if !s2.Contains(e) {
 			s.Add(e)
 		}
@@ -254,20 +255,14 @@ func String(s Interface) string {
 }
 
 func Clone(s1 Interface) Interface {
-	clone := New()
-
-	for _, e := range s1.Elements() {
-		clone.Add(e)
-	}
-
-	return clone
+	return With(s1.Elements())
 }
 
 func CartesianProduct(s1, s2 Interface) Interface {
 	s := New()
 
-	for _, e1 := range s1.Elements() {
-		for _, e2 := range s2.Elements() {
+	for e1 := range s1.Iter() {
+		for e2 := range s2.Iter() {
 			s.Add(&Tuple{First: e1, Second: e2})
 		}
 	}
