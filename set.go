@@ -281,6 +281,7 @@ func multiUnion(e Element, T Interface) Interface {
 	return n
 }
 
+// Using the recursive algorithm given on wikipedia
 func PowerSet(s Interface) Interface {
 	// If S = { }, then P(S) = { { } } is returned.
 	if s.Cardinality() == 0 {
