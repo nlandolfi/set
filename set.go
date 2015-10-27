@@ -160,10 +160,13 @@ func (s *mapSet) String() string {
 
 // --- Tuple (For Cartesian Products) {{{
 
+// Tuple represents a two-dimensional list of Elements.
 type Tuple struct {
 	First, Second Element
 }
 
+// String constructs a string representation of a Tuple.
+// For Example: (First, Second).
 func (t *Tuple) String() string {
 	return fmt.Sprintf("(%v, %v)", t.First, t.Second)
 }
