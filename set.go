@@ -9,30 +9,43 @@ import (
 
 type (
 	// An Element can be any type. The types of various items added
-	// to a set should probably not change, though this isn't strictly
-	// disallowed
+	// to a set likely should not change, though this is not strictly
+	// disallowed.
 	Element interface{}
 
-	// A slice of elements
+	// A slice of elements.
 	Elements []Element
 
-	// AbstractInterface defines an abstraction over a physical set.
-	// It is a set with potentially infinitie membership, (predicate definitions)
+	// AbstractInterface defines an highest level interface over a physical set.
+	// A set implementing AbstractInterface could have infinite membership. Consider
+	// the case of set with a predicate definition of membership.
 	AbstractInterface interface {
+		// Checks membership.
+		// True iff an Element, e ∈ Set backing this AbstractInterface.
 		Contains(Element) bool
 	}
 
-	// Interface represents the set of elements You can add, remove and count the number
-	// of elements of a set. Additionally, you can ask for the slice of elements which
-	// the set contains
+	// Interface defines the basic operations of set of elements.
+	// A set must support inclusion, exclusion and cardinality.
+	// Since this is an Interface for a physical set, it must also support
+	// produce a slice or stream of all Elements.
 	Interface interface {
+		// Inherits: Contains(Element) bool
 		AbstractInterface
 
+		// Inclusion.
 		Add(Element) bool
+
+		// Exclusion
 		Remove(Element) bool
+
+		// |S|
 		Cardinality() uint
 
+		// A slice of all member elements.
 		Elements() []Element
+
+		// A channel (stream) of all member elements.
 		Iter() <-chan Element
 	}
 )
@@ -126,9 +139,11 @@ func (s *mapSet) Elements() []Element {
 func (s *mapSet) Iter() <-chan Element {
 	c := make(chan Element, len(*s))
 
+	els := (*s).Elements()
+
 	go func() {
-		for k := range *s {
-			c <- k
+		for i := range els {
+			c <- els[i]
 		}
 
 		close(c)
@@ -157,6 +172,7 @@ func (t *Tuple) String() string {
 
 // --- Equivalence, IsSubset IsSuperset {{{
 
+// Equivalent → true iff s1 ≡ s2 (s1 is identical to s2)
 func Equivalent(s1, s2 Interface) bool {
 	// is every element in s1 a member of s2
 	for e := range s1.Iter() {
@@ -175,6 +191,7 @@ func Equivalent(s1, s2 Interface) bool {
 	return true
 }
 
+// IsSubset → true iff s1 ⊆ s2 (s1 is a subset of s2)
 func IsSubset(s1, s2 Interface) bool {
 	for e := range s1.Iter() {
 		if !s2.Contains(e) {
@@ -185,6 +202,12 @@ func IsSubset(s1, s2 Interface) bool {
 	return true
 }
 
+// IsProperSubset → true iff s1 ⊊ s2 (s1 is the proper subset of s2)
+func IsProperSubset(s1, s2 Interface) bool {
+	return IsSubset(s1, s2) && !Equivalent(s1, s2)
+}
+
+// IsSuperset → true iff s2 ⊆ s1 (s1 is a superset of s2).
 func IsSuperset(s1, s2 Interface) bool {
 	return IsSubset(s2, s1)
 }
@@ -193,6 +216,7 @@ func IsSuperset(s1, s2 Interface) bool {
 
 // --- Union, Intersection {{{
 
+// Union → s1 ∪ s2
 func Union(s1, s2 Interface) Interface {
 	s := With(s1.Elements())
 
@@ -203,6 +227,7 @@ func Union(s1, s2 Interface) Interface {
 	return s
 }
 
+// Intersection → s1 ∩ s2
 func Intersection(s1, s2 Interface) Interface {
 	s := New()
 
@@ -225,7 +250,8 @@ func Intersection(s1, s2 Interface) Interface {
 	return s
 }
 
-// Complement(s1, s2) = s1\s2
+// Complement →  s1\s2 (the relative complement of s2 with s1)
+// That is, all elements in s1 that are not in s2.
 func Complement(s1, s2 Interface) Interface {
 	s := New()
 
@@ -242,6 +268,8 @@ func Complement(s1, s2 Interface) Interface {
 
 // --- Misc. {{{
 
+// String generates a string representation of a set of the form
+// "{element1, element2, ..., elementN}".
 func String(s Interface) string {
 	elements := s.Elements()
 
@@ -254,10 +282,15 @@ func String(s Interface) string {
 	return fmt.Sprintf("{%s}", strings.Join(elementStrings, ", "))
 }
 
+// Clone creates a carbon copy of s1.
 func Clone(s1 Interface) Interface {
 	return With(s1.Elements())
 }
 
+// CartesianProduct → {(x, y) | ∀ x ∈ s1, ∀ y ∈ s2}
+// For example:
+//		CartesianProduct(A, B), where A = {1, 2} and B = {7, 8}
+//        => {(1, 7), (1, 8), (2, 7), (2, 8)}
 func CartesianProduct(s1, s2 Interface) Interface {
 	s := New()
 
@@ -281,7 +314,9 @@ func multiUnion(e Element, T Interface) Interface {
 	return n
 }
 
-// Using the recursive algorithm given on wikipedia
+// PowerSet → 𝒫(s)
+// Source: Implemeneted using the recursive algorithm given on wikipedia,
+//   https://en.wikipedia.org/wiki/Power_set#Algorithms
 func PowerSet(s Interface) Interface {
 	// If S = { }, then P(S) = { { } } is returned.
 	if s.Cardinality() == 0 {
@@ -292,6 +327,11 @@ func PowerSet(s Interface) Interface {
 	T := Complement(s, WithElements(e))
 
 	return Union(PowerSet(T), multiUnion(e, PowerSet(T)))
+}
+
+// 𝒫 is an alias for the PowerSet function.
+func 𝒫(s Interface) Interface {
+	return PowerSet(s)
 }
 
 // --- }}}
