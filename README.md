@@ -1,4 +1,4 @@
-#### set [![GoDoc](https://godoc.org/github.com/nlandolfi/set?status.svg)](https://godoc.org/github.com/nlandolfi/set)
+## set [![GoDoc](https://godoc.org/github.com/nlandolfi/set?status.svg)](https://godoc.org/github.com/nlandolfi/set)
 
 The set package defines the Interface for working with sets and provides an implementation of a set backed by a Go map.
 
