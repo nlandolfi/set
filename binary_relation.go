@@ -243,24 +243,30 @@ func Reverse(b BinaryRelation) BinaryRelation {
 
 // --- Function Based Binary Relation {{{
 
-type RelatedFunction func(Element, Element) bool
+// RelatedPredicate is a function that indicates whether two Elements
+// are related under some arbitrary relation.
+type RelatedPredicate func(Element, Element) bool
 
 type fnBinaryRelation struct {
 	universe Interface
-	related  RelatedFunction
+	related  RelatedPredicate
 }
 
-func NewFunctionBinaryRelation(u Interface, fn RelatedFunction) BinaryRelation {
+// NewFunctionBinaryRelation constructs a new BinaryRelation defined
+// by the RelatedPredicate fn, over the universe u.
+func NewFunctionBinaryRelation(u Interface, fn RelatedPredicate) BinaryRelation {
 	return &fnBinaryRelation{
 		universe: u,
 		related:  fn,
 	}
 }
 
+// Universe is the set over which this BinaryRelation is defined.
 func (fb *fnBinaryRelation) Universe() Interface {
 	return fb.universe
 }
 
+// ContainsRelation indicates whether x is in relation to y.
 func (fb *fnBinaryRelation) ContainsRelation(x, y Element) bool {
 	return fb.related(x, y)
 }

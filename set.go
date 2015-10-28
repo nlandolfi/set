@@ -13,7 +13,7 @@ type (
 	// disallowed.
 	Element interface{}
 
-	// A slice of elements.
+	// Elements returns a slice of this set's elements.
 	Elements []Element
 
 	// AbstractInterface defines an highest level interface over a physical set.
@@ -71,6 +71,7 @@ func With(elements []Element) Interface {
 	return s
 }
 
+// WithElements constructs a set with variable number of elements.
 func WithElements(elements ...Element) Interface {
 	return With(elements)
 }
