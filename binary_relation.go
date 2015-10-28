@@ -11,7 +11,7 @@ type (
 		ContainsRelation(Element, Element) bool
 	}
 
-	// A physical BinaryRelation is constructed
+	// A PhysicalBinaryRelation is constructed
 	// piecewise using the AddRelation function
 	// It's representation is finite, and stored
 	// completely. Contrast with a Binary Relation
@@ -201,6 +201,8 @@ func AntiSymmetric(b BinaryRelation) bool {
 	return true
 }
 
+// ComposableRelations indicates whether the list of relations can be
+// composed. That is to say whether they are defined over equivalent Universes.
 func ComposableRelations(relations []BinaryRelation) bool {
 	if len(relations) == 0 {
 		return true
@@ -233,6 +235,9 @@ func StrictOrder(b BinaryRelation) bool {
 	return WeakOrder(b) && AntiSymmetric(b)
 }
 
+// Reverse constructs the symetric opposite relation.
+// If xBy in the original binary relation, b, then yBx in
+// the reverse binary relation. The reverse of >= is <.
 func Reverse(b BinaryRelation) BinaryRelation {
 	return NewFunctionBinaryRelation(b.Universe(), func(x, y Element) bool {
 		return !b.ContainsRelation(x, y)
