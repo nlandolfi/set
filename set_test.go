@@ -11,6 +11,8 @@ import (
 // --- TestBasicUsage {{{
 
 func TestBasicUsage(t *testing.T) {
+	t.Parallel()
+
 	s := set.New()
 
 	s.Add(1)
@@ -55,7 +57,10 @@ func TestBasicUsage(t *testing.T) {
 // --- TestConstructors {{{
 
 func TestConstructors(t *testing.T) {
+	t.Parallel()
+
 	s := make([]set.Element, 10)
+
 	for i := 0; i < 10; i++ {
 		s[i] = i
 	}
@@ -78,7 +83,10 @@ func TestConstructors(t *testing.T) {
 // --- TestMembership {{{
 
 func TestMembership(t *testing.T) {
+	t.Parallel()
+
 	testElements := make(map[int]bool)
+
 	for i := 0; i < 123; i++ {
 		testElements[i] = true
 	}
@@ -113,7 +121,14 @@ func TestMembership(t *testing.T) {
 // --- TestCardinality {{{
 
 func TestCardinality(t *testing.T) {
+	t.Parallel()
+
+	if set.Empty.Cardinality() != 0 {
+		log.Fatal("Empty set should have cardinality 0")
+	}
+
 	s := set.New()
+
 	for i := 0; i < 100; i++ {
 		s.Add(i)
 	}
@@ -171,6 +186,86 @@ Counting:
 
 	if counts != 0 {
 		t.Fatal("Should be able to read a set's contents from multiple threads at once.")
+	}
+}
+
+// --- }}}
+
+// --- TestEquivalent {{{
+
+func TestEquivalent(t *testing.T) {
+	t.Parallel()
+
+	elements := []set.Element{"A", "B", "C", "D", "E", "F"}
+	A := set.WithElements(elements...)
+	B := set.WithElements(elements...)
+
+	if !set.Equivalent(A, B) {
+		t.Fatalf("%s and %s should be equivalent", A, B)
+	}
+
+	if set.Equivalent(A, set.Empty) {
+		t.Fatalf("%s and %s should not be equivalent", A, set.Empty)
+	}
+
+	if !set.Equivalent(set.Empty, set.Empty) {
+		t.Fatalf("%s and %s should be equivalent", set.Empty, set.Empty)
+	}
+}
+
+// --- }}}
+
+// --- TestSetRelations {{{
+
+func TestSetRelations(t *testing.T) {
+	elements := []set.Element{"A", "B", "C", "D", "E", "F"}
+	A := set.WithElements(elements...)
+	B := set.WithElements(elements...)
+
+	if !set.IsSubset(A, B) {
+		t.Fatalf("%s should be a subset of %s", A, B)
+	}
+
+	if set.IsProperSubset(A, B) {
+		t.Fatalf("%s should be a not proper subset of %s", A, B)
+	}
+
+	if !set.IsSuperset(A, B) {
+		t.Fatalf("%s should be a superset of %s", A, B)
+	}
+
+	if !set.IsSubset(A, A) {
+		t.Fatalf("%s should be a subset of itself")
+	}
+
+	if set.IsProperSubset(A, A) {
+		t.Fatalf("%s should not be a proper subset of itself")
+	}
+
+	if !set.IsSuperset(A, A) {
+		t.Fatalf("%s should be a superset of itself")
+	}
+
+	A.Remove("A")
+
+	if !set.IsSubset(A, B) {
+		t.Fatal("%s should be a subset of %s", A, B)
+	}
+
+	if set.IsSubset(B, A) {
+		t.Fatalf("%s should not be a subset of %s", B, A)
+	}
+
+	if !set.IsSuperset(B, A) {
+		t.Fatal("%s should be a superset of %s", B, A)
+	}
+
+	if set.IsSuperset(A, B) {
+		t.Fatal("%s should not be a superset of %s", A, B)
+	}
+
+	if !set.IsProperSubset(A, B) {
+		t.Fatal("%s should be a proper subset of %s", A, B)
 	}
 }
 

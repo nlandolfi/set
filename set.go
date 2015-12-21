@@ -272,6 +272,8 @@ func Complement(s1, s2 Interface) Interface {
 
 // --- Misc. {{{
 
+var Empty Interface = New()
+
 // String generates a string representation of a set of the form
 // "{element1, element2, ..., elementN}".
 func String(s Interface) string {
