@@ -51,6 +51,29 @@ func TestBasicUsage(t *testing.T) {
 
 // --- }}}
 
+// --- TestConstructors {{{
+
+func TestConstructors(t *testing.T) {
+	s := make([]set.Element, 10)
+	for i := 0; i < 10; i++ {
+		s[i] = i
+	}
+
+	A := set.With(s)
+	B := set.WithElements(s...)
+
+	for _, v := range s {
+		if !A.Contains(v) {
+			log.Fatal("A should contain %d (created by set.With)", v)
+		}
+		if !B.Contains(v) {
+			log.Fatal("B should contain %d (created with set.WithElements", v)
+		}
+	}
+}
+
+// --- }}}
+
 // --- TestMembership {{{
 
 func TestMembership(t *testing.T) {
