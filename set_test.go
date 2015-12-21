@@ -3,6 +3,7 @@ package set_test
 import (
 	"log"
 	"testing"
+	"time"
 
 	"github.com/nlandolfi/set"
 )
@@ -104,6 +105,72 @@ func TestMembership(t *testing.T) {
 		if s.Contains(k) {
 			log.Fatal("Set should not contain %d", k)
 		}
+	}
+}
+
+// --- }}}
+
+// --- TestCardinality {{{
+
+func TestCardinality(t *testing.T) {
+	s := set.New()
+	for i := 0; i < 100; i++ {
+		s.Add(i)
+	}
+
+	if s.Cardinality() != 100 {
+		log.Fatal("S should have cardinality 100, but has cardinality %d", s.Cardinality())
+	}
+
+	elements := s.Elements()
+
+	if len(elements) != 100 {
+		log.Fatal("S should return an []Element of length 100")
+	}
+
+	elements[46] = nil
+
+	if !s.Contains(46) {
+		log.Fatal("Mutating the elements array returned from set.Elements() should not affect set membership")
+	}
+
+	if s.Cardinality() != 100 {
+		log.Fatal("Mutating the elements array returned from set.Elements() should not affect set cardinality")
+	}
+
+	count := 100
+
+	for range s.Iter() {
+		count--
+	}
+
+	if count != 0 {
+		log.Fatal("set.Iter() should return 100 items, but only got %d", 100-count)
+	}
+
+	counts := 1000
+	counts_channel := make(chan int)
+
+	for i := 0; i < 10; i++ {
+		go func() {
+			for range s.Iter() {
+				counts_channel <- 1
+			}
+		}()
+	}
+
+Counting:
+	for {
+		select {
+		case <-counts_channel:
+			counts--
+		case <-time.After(10 * time.Millisecond):
+			break Counting
+		}
+	}
+
+	if counts != 0 {
+		t.Fatal("Should be able to read a set's contents from multiple threads at once.")
 	}
 }
 
