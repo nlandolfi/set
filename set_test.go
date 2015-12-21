@@ -1,12 +1,16 @@
-package set
+package set_test
 
 import (
 	"log"
 	"testing"
+
+	"github.com/nlandolfi/set"
 )
 
-func TestSetBasicUsage(t *testing.T) {
-	s := New()
+// --- TestBasicUsage {{{
+
+func TestBasicUsage(t *testing.T) {
+	s := set.New()
 
 	s.Add(1)
 	s.Add(2)
@@ -44,3 +48,40 @@ func TestSetBasicUsage(t *testing.T) {
 		t.Errorf("Expected length of Elements() [%d] to match Cardinality() [%d]", len(s.Elements()), s.Cardinality())
 	}
 }
+
+// --- }}}
+
+// --- TestMembership {{{
+
+func TestMembership(t *testing.T) {
+	testElements := make(map[int]bool)
+	for i := 0; i < 123; i++ {
+		testElements[i] = true
+	}
+
+	s := set.New()
+
+	for k, _ := range testElements {
+		if s.Contains(k) {
+			log.Fatalf("Set should not contain: %d", k)
+		}
+
+		s.Add(k)
+	}
+
+	for k, _ := range testElements {
+		if !s.Contains(k) {
+			log.Fatalf("Set should contain %d", k)
+		}
+
+		s.Remove(k)
+	}
+
+	for k, _ := range testElements {
+		if s.Contains(k) {
+			log.Fatal("Set should not contain %d", k)
+		}
+	}
+}
+
+// --- }}}

@@ -33,7 +33,7 @@ type (
 		// Inherits: Contains(Element) bool
 		AbstractInterface
 
-		// Inclusion.
+		// Inclusion
 		Add(Element) bool
 
 		// Exclusion
