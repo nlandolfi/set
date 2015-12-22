@@ -218,6 +218,8 @@ func TestEquivalent(t *testing.T) {
 // --- TestSetRelations {{{
 
 func TestSetRelations(t *testing.T) {
+	t.Parallel()
+
 	elements := []set.Element{"A", "B", "C", "D", "E", "F"}
 	A := set.WithElements(elements...)
 	B := set.WithElements(elements...)
@@ -266,6 +268,68 @@ func TestSetRelations(t *testing.T) {
 
 	if !set.IsProperSubset(A, B) {
 		t.Fatal("%s should be a proper subset of %s", A, B)
+	}
+}
+
+// --- }}}
+
+// --- TestSetOperations {{{
+
+func TestSetUnion(t *testing.T) {
+	t.Parallel()
+
+	A := set.WithElements(1, 2, 3)
+	B := set.WithElements(4, 5, 6)
+	U := set.Union(A, B)
+
+	for i := 1; i < 7; i++ {
+		if !U.Contains(i) {
+			t.Fatalf("Union of %s and %s should contain %d", A, B, i)
+		}
+	}
+
+	if U.Cardinality() != 6 {
+		t.Fatalf("Expected cardinality of union of %s and %s to be 6", A, B)
+	}
+
+	U.Remove(1)
+	U.Remove(6)
+
+	if !A.Contains(1) || !B.Contains(6) {
+		t.Fatalf("Modifying the union set should not change the original set")
+	}
+
+}
+
+func TestSetIntersection(t *testing.T) {
+	t.Parallel()
+
+	A := set.WithElements("one", "two")
+	B := set.WithElements("two", "three")
+	I := set.Intersection(A, B)
+
+	if I.Cardinality() != 1 {
+		t.Fatalf("Intersection of %s and %s should have cardinality 1", A, B)
+	}
+
+	expected := set.WithElements("two")
+
+	if !set.Equivalent(I, expected) {
+		t.Fatalf("Expected %s intersect %s to be %s, but got %s", A, B, expected, I)
+	}
+}
+
+func TestSetComplement(t *testing.T) {
+	t.Parallel()
+
+	A := set.WithElements(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	B := set.WithElements(2, 4, 6, 8, 10)
+	Odds := set.Complement(A, B)
+
+	expectedOdds := set.WithElements(1, 3, 5, 7, 9)
+
+	if !set.Equivalent(Odds, expectedOdds) {
+		t.Fatalf("Expected %s\\%s to be %s, but got %s", A, B, expectedOdds, Odds)
 	}
 }
 
