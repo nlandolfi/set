@@ -166,6 +166,45 @@ func Transitive(b BinaryRelation) bool {
 	return true
 }
 
+// Transitive checks the following condition:
+//	 (xBy and yBz) ⇒  xBz for any x, y, z ∈ X ≡ Universe()
+func TransitiveP(b BinaryRelation) bool {
+	if !Complete(b) {
+		return false
+	}
+
+	elems := b.Universe().Elements()
+
+	expected := len(elems)
+	done := make(chan bool)
+
+	// n^3 :(
+	for _, x := range elems {
+		go func(x Element) {
+			for _, y := range elems {
+				for _, z := range elems {
+					if b.ContainsRelation(x, y) && b.ContainsRelation(y, z) {
+						if !b.ContainsRelation(x, z) {
+							done <- false
+							return
+						}
+					}
+				}
+			}
+			done <- true
+		}(x)
+	}
+	for expected > 0 {
+		result := <-done
+		if !result {
+			return false
+		}
+		expected--
+	}
+
+	return true
+}
+
 // Symmetric checks the following condition:
 //	 xBy ⇒  yBx for any x, y ∈ X ≡ Universe
 func Symmetric(b BinaryRelation) bool {
