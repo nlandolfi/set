@@ -1,5 +1,5 @@
 all:
-	make check && make coverage && make bench
+	make check && make cover && make bench
 
 # bench runs the benchmarks
 bench:
@@ -10,5 +10,5 @@ check:
 	go test
 
 # coverage runs the tests and generates coverage info
-coverage:
+cover:
 	go test --cover
