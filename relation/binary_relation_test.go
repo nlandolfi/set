@@ -1,15 +1,16 @@
-package set_test
+package relation_test
 
 import (
 	"testing"
 
 	"github.com/nlandolfi/set"
+	"github.com/nlandolfi/set/relation"
 )
 
 func TestBinaryRelationBasicUsage(t *testing.T) {
 	s := set.WithElements(1, 2, 3, 4, 5, 6, 7, 8, 9, 0)
 
-	b := set.NewPhysicalBinaryRelationOn(s)
+	b := relation.New(s)
 
 	if b.Universe() != s {
 		t.Errorf("Expected b's universe to be the set given in constructoon")
@@ -30,7 +31,7 @@ func TestBinaryRelationBasicUsage(t *testing.T) {
 		t.Error("Expected the binary relation to contain (3, 2), as we defined it")
 	}
 
-	if set.Complete(b) {
+	if relation.Complete(b) {
 		t.Error("Expected b to be incomplete, consider: (9, 0)")
 	}
 

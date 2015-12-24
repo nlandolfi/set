@@ -1,9 +1,10 @@
-package set_test
+package relation_test
 
 import (
 	"testing"
 
 	"github.com/nlandolfi/set"
+	"github.com/nlandolfi/set/relation"
 )
 
 var numbers set.Interface = set.New()
@@ -14,17 +15,17 @@ func init() {
 	}
 }
 
-var equality set.BinaryRelation = set.NewFunctionBinaryRelation(numbers, func(x, y set.Element) bool {
+var equality relation.AbstractInterface = relation.NewFunctionBinaryRelation(numbers, func(x, y set.Element) bool {
 	return x == y
 })
 
-var lessEqual set.BinaryRelation = set.NewFunctionBinaryRelation(numbers, func(x, y set.Element) bool {
+var lessEqual relation.AbstractInterface = relation.NewFunctionBinaryRelation(numbers, func(x, y set.Element) bool {
 	return x.(int) <= y.(int)
 })
 
 func BenchmarkSymmetric(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		if set.Symmetric(equality) != true {
+		if relation.Symmetric(equality) != true {
 			b.Fatalf("The equality relation should be symmetric")
 		}
 	}
@@ -32,7 +33,7 @@ func BenchmarkSymmetric(b *testing.B) {
 
 func BenchmarkTransitive(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		if set.Transitive(lessEqual) != true {
+		if relation.Transitive(lessEqual) != true {
 			b.Fatalf("The less than or equal to relation should be transitive")
 		}
 	}
