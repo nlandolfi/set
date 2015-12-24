@@ -93,7 +93,7 @@ func TestMembership(t *testing.T) {
 
 	s := set.New()
 
-	for k, _ := range testElements {
+	for k := range testElements {
 		if s.Contains(k) {
 			log.Fatalf("Set should not contain: %d", k)
 		}
@@ -101,7 +101,7 @@ func TestMembership(t *testing.T) {
 		s.Add(k)
 	}
 
-	for k, _ := range testElements {
+	for k := range testElements {
 		if !s.Contains(k) {
 			log.Fatalf("Set should contain %d", k)
 		}
@@ -109,7 +109,7 @@ func TestMembership(t *testing.T) {
 		s.Remove(k)
 	}
 
-	for k, _ := range testElements {
+	for k := range testElements {
 		if s.Contains(k) {
 			log.Fatal("Set should not contain %d", k)
 		}
@@ -164,12 +164,12 @@ func TestCardinality(t *testing.T) {
 	}
 
 	counts := 1000
-	counts_channel := make(chan int)
+	countsChannel := make(chan int)
 
 	for i := 0; i < 10; i++ {
 		go func() {
 			for range s.Iter() {
-				counts_channel <- 1
+				countsChannel <- 1
 			}
 		}()
 	}
@@ -177,7 +177,7 @@ func TestCardinality(t *testing.T) {
 Counting:
 	for {
 		select {
-		case <-counts_channel:
+		case <-countsChannel:
 			counts--
 		case <-time.After(10 * time.Millisecond):
 			break Counting
