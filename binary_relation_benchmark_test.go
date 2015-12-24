@@ -37,11 +37,3 @@ func BenchmarkTransitive(b *testing.B) {
 		}
 	}
 }
-
-func BenchmarkTransitiveP(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		if set.TransitiveP(lessEqual) != true {
-			b.Fatalf("The less than or equal to relation should be transitive")
-		}
-	}
-}

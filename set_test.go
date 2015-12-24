@@ -8,9 +8,9 @@ import (
 	"github.com/nlandolfi/set"
 )
 
-// --- TestBasicUsage {{{
+// --- TestSetBasicUsage {{{
 
-func TestBasicUsage(t *testing.T) {
+func TestSetBasicUsage(t *testing.T) {
 	t.Parallel()
 
 	s := set.New()
