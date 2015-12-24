@@ -90,6 +90,21 @@ type mapSet map[Element]bool
 func (s *mapSet) Add(e Element) bool {
 	_, contains := (*s)[e]
 
+	sub, ok := e.(Interface)
+	if ok {
+		for k := range *s {
+			key, ok := k.(Interface)
+			if !ok {
+				break
+			}
+
+			if Equivalent(sub, key) {
+				contains = true
+				break
+			}
+		}
+	}
+
 	if !contains {
 		(*s)[e] = true
 	}
@@ -104,6 +119,22 @@ func (s *mapSet) Add(e Element) bool {
 func (s *mapSet) Remove(e Element) bool {
 	_, contains := (*s)[e]
 
+	sub, ok := e.(Interface)
+	if ok {
+		for k := range *s {
+			key, ok := k.(Interface)
+			if !ok {
+				break
+			}
+
+			if Equivalent(sub, key) {
+				e = key
+				contains = true
+				break
+			}
+		}
+	}
+
 	if contains {
 		delete(*s, e)
 	}
@@ -114,8 +145,24 @@ func (s *mapSet) Remove(e Element) bool {
 // Contains returns a flag determining whether an Element, e
 // is a member of the set
 func (s *mapSet) Contains(e Element) bool {
-	_, ok := (*s)[e]
-	return ok
+	_, contains := (*s)[e]
+
+	sub, ok := e.(Interface)
+	if ok {
+		for k := range *s {
+			key, ok := k.(Interface)
+			if !ok {
+				break
+			}
+
+			if Equivalent(sub, key) {
+				contains = true
+				break
+			}
+		}
+	}
+
+	return contains
 }
 
 // Cardinality returns the size of the set.
@@ -302,7 +349,7 @@ func CartesianProduct(s1, s2 Interface) Interface {
 
 	for e1 := range s1.Iter() {
 		for e2 := range s2.Iter() {
-			s.Add(&Tuple{First: e1, Second: e2})
+			s.Add(Tuple{First: e1, Second: e2})
 		}
 	}
 

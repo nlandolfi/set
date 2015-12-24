@@ -334,3 +334,62 @@ func TestSetComplement(t *testing.T) {
 }
 
 // --- }}}
+
+// --- TestString {{{
+
+func TestString(t *testing.T) {
+	t.Parallel()
+
+	A := set.WithElements(1, 2, 3)
+	B := set.Clone(A)
+
+	if !set.Equivalent(A, B) {
+		t.Fatalf("Clone of %s: %s should be equivalent", A, B)
+	}
+
+	B.Remove(1)
+
+	if set.Equivalent(A, B) {
+		t.Fatalf("%s should no longer be equivalent to %s", B, A)
+	}
+
+	if !A.Contains(1) {
+		t.Fatalf("%s should still contain 1", A)
+	}
+}
+
+// --- }}}
+
+// --- TestCartesianProduct {{{
+
+func TestCartesianProduce(t *testing.T) {
+	t.Parallel()
+
+	ranks := set.With([]set.Element{"2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"})
+	suits := set.With([]set.Element{"♠", "♥", "♦", "♣"})
+
+	deck := set.CartesianProduct(ranks, suits)
+
+	if !deck.Contains(set.Tuple{"2", "♠"}) {
+		t.Fatalf("Deck of cards should contain 2 of ♠")
+	}
+}
+
+// --- }}}
+
+// --- TestPowerSet {{{
+
+func TestPowerSet(t *testing.T) {
+	t.Parallel()
+
+	A := set.WithElements(1, 2, 3)
+	P := set.PowerSet(A)
+
+	one := set.WithElements(1)
+
+	if !P.Contains(one) {
+		t.Fatalf("Power set of %s should contains %s", A, one)
+	}
+}
+
+// --- }}}
