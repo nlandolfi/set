@@ -16,9 +16,9 @@ type (
 	// Elements returns a slice of this set's elements.
 	Elements []Element
 
-	// AbstractInterface defines an highest level interface over a physical set.
+	// AbstractInterface defines an high level interface over a physical set.
 	// A set implementing AbstractInterface could have infinite membership. Consider
-	// the case of set with a predicate definition of membership.
+	// the case of set with predicate-based of membership.
 	AbstractInterface interface {
 		// Checks membership.
 		// True iff an Element, e ∈ Set backing this AbstractInterface.
