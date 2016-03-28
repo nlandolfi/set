@@ -13,40 +13,43 @@ type (
 	// disallowed.
 	Element interface{}
 
-	// Elements returns a slice of this set's elements.
+	// Elements is a typed slice of elements
 	Elements []Element
 
-	// AbstractInterface defines an high level interface over a physical set.
-	// A set implementing AbstractInterface could have infinite membership. Consider
-	// the case of set with predicate-based of membership.
+	// AbstractInterface requires that a structure can determine membership
+	//
+	// Note: One could declare predicate-based membership, which is the
+	// preferred method of implementing infinite sets.
 	AbstractInterface interface {
-		// Checks membership.
-		// True iff an Element, e ∈ Set backing this AbstractInterface.
-		Contains(Element) bool
+		// Contains returns a boolean indicating set membership.
+		// True iff e ∈ the set backing this AbstractInterface.
+		Contains(e Element) bool
 	}
 
-	// Interface defines the basic operations of set of elements.
-	// A set must support inclusion, exclusion and cardinality.
-	// Since this is an Interface for a physical set, it must also support
-	// produce a slice or stream of all Elements.
+	// Interface includes the basic operations which may be performed on a
+	// physical set.
 	Interface interface {
 		// Inherits: Contains(Element) bool
 		AbstractInterface
 
-		// Inclusion
-		Add(Element) bool
+		// Add includes e as a member of the set.
+		//
+		// Note: Add must be idempotent.
+		Add(e Element)
 
-		// Exclusion
-		Remove(Element) bool
+		// Remove excludes e as a member of the set.
+		//
+		// Note: Remove must be idempotent.
+		Remove(e Element)
 
-		// |S|
+		// Cardinality retrieves the size of the set.
 		Cardinality() uint
 
-		// A slice of all member elements.
+		// Elements retrieves a slice of all member elements.
+		//
+		// Note: Mutating this slice must not modify the
+		// underlying set structure.
 		Elements() []Element
-
-		// A channel (stream) of all member elements.
-		Iter() <-chan Element
 	}
 )
 
@@ -83,63 +86,18 @@ func WithElements(elements ...Element) Interface {
 // mapSet is an implementation of a set backed by a golang map
 type mapSet map[Element]bool
 
-// Add will include Element, e, as a member of the set.
-// If e is already a member of the set Add still works.
-// Add returns a boolean. If the Element, e, was already
-// a member of the Set Add returns true, else it is false
-func (s *mapSet) Add(e Element) bool {
-	_, contains := (*s)[e]
-
-	sub, ok := e.(Interface)
-	if ok {
-		for k := range *s {
-			key, ok := k.(Interface)
-			if !ok {
-				break
-			}
-
-			if Equivalent(sub, key) {
-				contains = true
-				break
-			}
-		}
-	}
-
-	if !contains {
-		(*s)[e] = true
-	}
-
-	return contains
+// Add includes e as a member of the set.
+//
+// Add is idempotent.
+func (s *mapSet) Add(e Element) {
+	(*s)[e] = true
 }
 
-// Remove will exclude an Element, e, as a member of the set.
-// If e is not a member of the set, Remove still works, but it
-// will return false. If e was a member which was removed,
-// Remove will return true.
-func (s *mapSet) Remove(e Element) bool {
-	_, contains := (*s)[e]
-
-	sub, ok := e.(Interface)
-	if ok {
-		for k := range *s {
-			key, ok := k.(Interface)
-			if !ok {
-				break
-			}
-
-			if Equivalent(sub, key) {
-				e = key
-				contains = true
-				break
-			}
-		}
-	}
-
-	if contains {
-		delete(*s, e)
-	}
-
-	return contains
+// Remove excludes e as a member of the set.
+//
+// Remove is idempotent.
+func (s *mapSet) Remove(e Element) {
+	delete(*s, e)
 }
 
 // Contains returns a flag determining whether an Element, e
@@ -147,12 +105,13 @@ func (s *mapSet) Remove(e Element) bool {
 func (s *mapSet) Contains(e Element) bool {
 	_, contains := (*s)[e]
 
+	// If e is a set, check deep equality with keys
 	sub, ok := e.(Interface)
 	if ok {
 		for k := range *s {
 			key, ok := k.(Interface)
 			if !ok {
-				break
+				continue
 			}
 
 			if Equivalent(sub, key) {
@@ -166,13 +125,15 @@ func (s *mapSet) Contains(e Element) bool {
 }
 
 // Cardinality returns the size of the set.
-// Suppose set S, Cardinality(S) ≡ |S| (as expected)
+// Cardinality(s) ≡ |s|
 func (s *mapSet) Cardinality() uint {
 	return uint(len(*s))
 }
 
 // Elements returns a slice of the elements contained in this
-// set. This slice is not the internal reprentation and therefore
+// set.
+//
+// Note: This slice is not the internal reprentation and therefore
 // can be mutated.
 func (s *mapSet) Elements() []Element {
 	e := make([]Element, len(*s))
@@ -184,6 +145,7 @@ func (s *mapSet) Elements() []Element {
 	return e
 }
 
+// Returns a stream of the set elements
 func (s *mapSet) Iter() <-chan Element {
 	c := make(chan Element, len(*s))
 
@@ -226,14 +188,14 @@ func (t *Tuple) String() string {
 // Equivalent → true iff s1 ≡ s2 (s1 is identical to s2)
 func Equivalent(s1, s2 Interface) bool {
 	// is every element in s1 a member of s2
-	for e := range s1.Iter() {
+	for _, e := range s1.Elements() {
 		if !s2.Contains(e) {
 			return false
 		}
 	}
 
 	// is every element in s2 a member of s1
-	for e := range s2.Iter() {
+	for _, e := range s2.Elements() {
 		if !s1.Contains(e) {
 			return false
 		}
@@ -244,7 +206,7 @@ func Equivalent(s1, s2 Interface) bool {
 
 // IsSubset → true iff s1 ⊆ s2 (s1 is a subset of s2)
 func IsSubset(s1, s2 Interface) bool {
-	for e := range s1.Iter() {
+	for _, e := range s1.Elements() {
 		if !s2.Contains(e) {
 			return false
 		}
@@ -271,7 +233,7 @@ func IsSuperset(s1, s2 Interface) bool {
 func Union(s1, s2 Interface) Interface {
 	s := With(s1.Elements())
 
-	for e := range s2.Iter() {
+	for _, e := range s2.Elements() {
 		s.Add(e)
 	}
 
@@ -285,13 +247,13 @@ func Intersection(s1, s2 Interface) Interface {
 	c1, c2 := s1.Cardinality(), s2.Cardinality()
 
 	if c1 < c2 {
-		for e := range s1.Iter() {
+		for _, e := range s1.Elements() {
 			if s2.Contains(e) {
 				s.Add(e)
 			}
 		}
 	} else {
-		for e := range s2.Iter() {
+		for _, e := range s2.Elements() {
 			if s1.Contains(e) {
 				s.Add(e)
 			}
@@ -306,7 +268,7 @@ func Intersection(s1, s2 Interface) Interface {
 func Complement(s1, s2 Interface) Interface {
 	s := New()
 
-	for e := range s1.Iter() {
+	for _, e := range s1.Elements() {
 		if !s2.Contains(e) {
 			s.Add(e)
 		}
@@ -348,8 +310,8 @@ func Clone(s1 Interface) Interface {
 func CartesianProduct(s1, s2 Interface) Interface {
 	s := New()
 
-	for e1 := range s1.Iter() {
-		for e2 := range s2.Iter() {
+	for _, e1 := range s1.Elements() {
+		for _, e2 := range s2.Elements() {
 			s.Add(Tuple{First: e1, Second: e2})
 		}
 	}

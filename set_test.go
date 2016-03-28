@@ -155,7 +155,7 @@ func TestCardinality(t *testing.T) {
 
 	count := 100
 
-	for range s.Iter() {
+	for range s.Elements() {
 		count--
 	}
 
@@ -168,7 +168,7 @@ func TestCardinality(t *testing.T) {
 
 	for i := 0; i < 10; i++ {
 		go func() {
-			for range s.Iter() {
+			for range s.Elements() {
 				countsChannel <- 1
 			}
 		}()
