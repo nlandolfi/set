@@ -51,6 +51,8 @@ type (
 		// underlying set structure.
 		Elements() []Element
 	}
+
+	Container func(e Element) bool
 )
 
 // --- }}}
@@ -348,6 +350,15 @@ func PowerSet(s Interface) Interface {
 // 𝒫 is an alias for the PowerSet function.
 func 𝒫(s Interface) Interface {
 	return PowerSet(s)
+}
+
+// --- }}}
+
+// --- Container {{{
+
+// Have Container implement the AbstractInterface
+func (c Container) Contains(e Element) bool {
+	return c(e)
 }
 
 // --- }}}
